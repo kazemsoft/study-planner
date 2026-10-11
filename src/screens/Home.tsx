@@ -90,6 +90,8 @@ export default function Home() {
         </button>
       )}
 
+      <span className="muted" style={{ textAlign: 'center', fontSize: 12 }}>برنامه‌ریز درسی هوشا • نسخه ۱٫۰٫۱</span>
+
       {bell && (
         <Sheet onClose={() => setBell(false)} label="یادآور">
           <h3 className="section-title">یادآور جلسه‌ها</h3>
