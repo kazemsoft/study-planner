@@ -2,9 +2,25 @@
 // __BUILD__ is replaced at build time, so every release gives the browser a new file and triggers an update
 const CACHE = 'hosha-__BUILD__'
 
+// Save the page plus every script, style and font it needs, so the very first visit already works offline.
+async function precache() {
+  const cache = await caches.open(CACHE)
+  const html = await (await fetch('/', { cache: 'reload' })).text()
+  const urls = new Set(['/', '/manifest.webmanifest'])
+  for (const m of html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)) urls.add(m[1])
+  for (const u of [...urls].filter((u) => u.endsWith('.css'))) {
+    const css = await (await fetch(u)).text()
+    for (const m of css.matchAll(/url\(([^)]+)\)/g)) {
+      const f = m[1].replace(/["']/g, '')
+      if (!f.startsWith('data:')) urls.add(new URL(f, location.origin + u).pathname)
+    }
+  }
+  await cache.addAll([...urls])
+}
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest'])))
-  // wait for the user's OK (message below) before replacing the running version
+  e.waitUntil(precache())
+  // then wait for the user's OK (message below) before replacing the running version
 })
 
 self.addEventListener('message', (e) => {
@@ -24,7 +40,10 @@ self.addEventListener('fetch', (e) => {
   const save = (key, res) => {
     // only complete, successful replies; never an HTML fallback standing in for a missing file
     const type = res.headers.get('content-type') || ''
-    if (res.status === 200 && (isPage || !type.includes('text/html'))) caches.open(CACHE).then((c) => c.put(key, res.clone())).catch(() => {})
+    if (res.status === 200 && (isPage || !type.includes('text/html'))) {
+      const copy = res.clone() // must be cloned now, before the page starts reading the reply
+      caches.open(CACHE).then((c) => c.put(key, copy)).catch(() => {})
+    }
     return res
   }
   if (isPage) {
