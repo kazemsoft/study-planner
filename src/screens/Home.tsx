@@ -10,6 +10,7 @@ export default function Home() {
   const { s, dispatch, go, openAdd, toast } = useApp()
   const now = useNow(30_000)
   const [bell, setBell] = useState(false)
+  const [about, setAbout] = useState(false)
   const d = new Date(now)
   const t = today()
   const hr = d.getHours()
@@ -90,7 +91,22 @@ export default function Home() {
         </button>
       )}
 
-      <span className="muted" style={{ textAlign: 'center', fontSize: 12 }}>برنامه‌ریز درسی هوشا • نسخه ۱٫۰٫۱</span>
+      <button className="btn" style={{ color: 'var(--primary-dark)', minHeight: 44 }} onClick={() => setAbout(true)}>درباره‌ی ما</button>
+
+      {about && (
+        <Sheet onClose={() => setAbout(false)} label="درباره‌ی ما">
+          <h3 className="section-title">درباره‌ی ما</h3>
+          <div className="card col" style={{ gap: 6, boxShadow: 'none', background: '#f7f7fa' }}>
+            <strong>برنامه‌ریز درسی هوشا</strong>
+            <span className="muted">نسخه ۱٫۰٫۲</span>
+          </div>
+          <div className="row" style={{ gap: 10 }}>
+            <span className="course-ico tint" style={cvar('#5a67d8')}><Icon n="edit" /></span>
+            <div><span className="muted">برنامه‌نویس</span><div style={{ fontWeight: 700 }}>محمد قلیان</div></div>
+          </div>
+          <button className="btn primary" onClick={() => setAbout(false)}>بستن</button>
+        </Sheet>
+      )}
 
       {bell && (
         <Sheet onClose={() => setBell(false)} label="یادآور">
