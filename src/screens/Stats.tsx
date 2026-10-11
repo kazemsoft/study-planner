@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp, weekOf } from '../ctx'
-import { WD_SHORT, fa, fmtDur, fmtJ, fmtJWd, faTime, fmtClock } from '../lib/dates'
+import { WD_SHORT, WEEKDAYS, fa, fmtDur, fmtJ, fmtJWd, faTime, fmtClock } from '../lib/dates'
 import { perCourse, perDay, totalSec } from '../lib/stats'
 import { Empty, Icon, cvar } from '../ui'
 
@@ -20,8 +20,8 @@ export default function Stats() {
     <div className="screen">
       <header><h1 className="page-title">آمار مطالعه</h1></header>
       <div className="seg">
-        <button className={off === 0 ? 'on' : ''} onClick={() => setOff(0)}>این هفته</button>
-        <button className={off === -1 ? 'on' : ''} onClick={() => setOff(-1)}>هفته قبل</button>
+        <button className={off === 0 ? 'on' : ''} aria-pressed={off === 0} onClick={() => setOff(0)}>این هفته</button>
+        <button className={off === -1 ? 'on' : ''} aria-pressed={off === -1} onClick={() => setOff(-1)}>هفته قبل</button>
       </div>
       <span className="muted">{fmtJ(wk.from, false)} تا {fmtJ(wk.to)}</span>
 
@@ -37,10 +37,10 @@ export default function Stats() {
         <>
           <section className="card col">
             <h2 className="section-title">مطالعه روزانه</h2>
-            <div className="cols">
+            <div className="cols" role="img" aria-label={`مطالعه‌ی روزانه بر حسب ساعت: ${days.map((d, i) => `${WEEKDAYS[i]} ${fa((d / 3600).toFixed(1))}`).join('، ')}`}>
               {days.map((sec, i) => (
                 <div key={i} className={sec ? '' : 'zero'}>
-                  <span className="num">{sec ? fa((sec / 3600).toFixed(1)) : ''}</span>
+                  <span className="num">{sec ? fa((sec / 3600).toFixed(1)) : '۰'}</span>
                   <i style={{ height: `${(sec / max) * 100 * 0.78}%` }} />
                   <b style={{ color: 'var(--ink)' }}>{WD_SHORT[i]}</b>
                 </div>

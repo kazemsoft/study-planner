@@ -20,13 +20,22 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
-  const save = (res) => {
-    if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()))
+  const isPage = req.mode === 'navigate'
+  const save = (key, res) => {
+    // only complete, successful replies; never an HTML fallback standing in for a missing file
+    const type = res.headers.get('content-type') || ''
+    if (res.status === 200 && (isPage || !type.includes('text/html'))) caches.open(CACHE).then((c) => c.put(key, res.clone())).catch(() => {})
     return res
   }
-  if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(save).catch(() => caches.match('/')))
+  if (isPage) {
+    e.respondWith(
+      new Promise((resolve) => {
+        const fallback = () => caches.match('/').then((r) => r || Response.error())
+        const timer = setTimeout(() => fallback().then(resolve), 4000) // slow network: use the saved copy
+        fetch(req).then((res) => (clearTimeout(timer), resolve(save('/', res)))).catch(() => (clearTimeout(timer), fallback().then(resolve)))
+      }),
+    )
     return
   }
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then(save)))
+  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => save(req, res))))
 })

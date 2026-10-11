@@ -4,22 +4,49 @@ import { addDays, iso } from './dates'
 const KEY = 'hosha:v1'
 export const initial: State = { v: 1, courses: [], rules: [], logs: [], timer: null, alarmLead: 10 }
 
-export function load(): State {
+const isArr = Array.isArray
+/** Accepts only well-formed saved data; anything else is kept as a backup and the app starts clean. */
+export function parseState(raw: string | null): State | null {
+  if (!raw) return null
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) ?? 'null')
-    if (s && s.v === 1) return { ...initial, ...s }
+    const s = JSON.parse(raw)
+    if (!s || s.v !== 1 || !isArr(s.courses) || !isArr(s.rules) || !isArr(s.logs)) throw 0
+    const rules = s.rules.map((r: Rule) => ({ ...r, overrides: r && typeof r.overrides === 'object' && r.overrides ? r.overrides : {} }))
+    const timer = s.timer && typeof s.timer.courseId === 'string' && typeof s.timer.accMs === 'number' ? s.timer : null
+    return { ...initial, ...s, rules, timer, alarmLead: typeof s.alarmLead === 'number' ? s.alarmLead : initial.alarmLead }
   } catch {
-    /* corrupt or blocked storage → start empty */
+    return null
+  }
+}
+
+export function load(): State {
+  let raw: string | null = null
+  try {
+    raw = localStorage.getItem(KEY)
+  } catch {
+    return initial // storage blocked
+  }
+  const ok = parseState(raw)
+  if (ok) return ok
+  if (raw) {
+    try {
+      localStorage.setItem(KEY + ':bad', raw) // keep unreadable data instead of silently erasing it
+    } catch {
+      /* ignore */
+    }
   }
   return initial
 }
-export function save(s: State) {
+/** false when the browser refused to store (full or blocked storage) */
+export function save(s: State): boolean {
   try {
     localStorage.setItem(KEY, JSON.stringify(s))
+    return true
   } catch {
-    /* quota/blocked: app still works in memory */
+    return false
   }
 }
+export const STORAGE_KEY = KEY
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
 
@@ -37,8 +64,9 @@ export type Action =
   | { t: 'timer/cancel' }
   | { t: 'timer/finish' }
   | { t: 'alarm'; lead: number }
+  | { t: 'replace'; state: State }
 
-export const elapsedMs = (t: Timer, now = Date.now()) => t.accMs + (t.status === 'running' ? now - t.startedAt : 0)
+export const elapsedMs = (t: Timer, now = Date.now()) => Math.max(0, t.accMs + (t.status === 'running' ? now - t.startedAt : 0))
 
 export function reducer(s: State, a: Action): State {
   switch (a.t) {
@@ -128,5 +156,7 @@ export function reducer(s: State, a: Action): State {
     }
     case 'alarm':
       return { ...s, alarmLead: a.lead }
+    case 'replace':
+      return a.state
   }
 }

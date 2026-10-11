@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { addDays, fa, fromMin, iso, toMin, today } from './lib/dates'
 import { occurrencesInRange } from './lib/occurrences'
-import { load, reducer, save, type Action } from './lib/store'
+import { STORAGE_KEY, load, parseState, reducer, save, type Action } from './lib/store'
 import type { State } from './types'
 
 export type Tab = 'home' | 'schedule' | 'courses' | 'timer' | 'stats'
@@ -26,12 +26,30 @@ export function Provider({ children }: { children: ReactNode }) {
   const [msg, setMsg] = useState<{ text: string; err: boolean } | null>(null)
   const timer = useRef<number>(0)
 
-  useEffect(() => save(s), [s])
-
   const toast = useCallback((text: string, err = false) => {
     setMsg({ text, err })
     clearTimeout(timer.current)
     timer.current = window.setTimeout(() => setMsg(null), 3500)
+  }, [])
+
+  const warned = useRef(false)
+  useEffect(() => {
+    if (save(s)) warned.current = false
+    else if (!warned.current) {
+      warned.current = true
+      toast('ذخیره‌سازی ممکن نشد؛ تغییرات با بستن برنامه از بین می‌رود', true)
+    }
+  }, [s, toast])
+
+  // another open copy of the app (e.g. installed app + browser tab) changed the data: follow it
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY) return
+      const next = parseState(e.newValue)
+      if (next) dispatch({ t: 'replace', state: next })
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   // reminders: only while the app is open (no service worker in MVP)
@@ -49,7 +67,7 @@ export function Provider({ children }: { children: ReactNode }) {
         const name = s.courses.find((c) => c.id === o.courseId)?.name ?? ''
         const text = `${name} تا ${fa(left)} دقیقه‌ی دیگر (${fa(fromMin(toMin(o.start)))})`
         toast('⏰ ' + text)
-        if ('Notification' in window && Notification.permission === 'granted') new Notification('برنامه‌ریز هوشا', { body: text })
+        notify(text)
       }
     }
     tick()
@@ -71,6 +89,23 @@ export function Provider({ children }: { children: ReactNode }) {
       )}
     </C.Provider>
   )
+}
+
+/** System notification; never throws (Android Chrome only allows it through the service worker). */
+function notify(body: string) {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return
+    const title = 'برنامه‌ریز هوشا'
+    navigator.serviceWorker
+      ?.getRegistration()
+      .then((r) => {
+        if (r) return r.showNotification(title, { body })
+        new Notification(title, { body })
+      })
+      .catch(() => {})
+  } catch {
+    /* in-app toast already shown */
+  }
 }
 
 export const weekOf = (offset: number) => {

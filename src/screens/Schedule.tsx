@@ -58,9 +58,9 @@ export default function Schedule() {
         </div>
         <button className="ib white" aria-label="برنامه جدید" onClick={() => openAdd()}><Icon n="plus" /></button>
       </header>
-      <div className="seg" role="tablist" style={{ alignSelf: 'center', width: 180 }}>
-        <button className={view === 'week' ? 'on' : ''} onClick={() => setView('week')}>هفتگی</button>
-        <button className={view === 'month' ? 'on' : ''} onClick={() => setView('month')}>ماهانه</button>
+      <div className="seg" style={{ alignSelf: 'center', width: 180 }}>
+        <button className={view === 'week' ? 'on' : ''} aria-pressed={view === 'week'} onClick={() => setView('week')}>هفتگی</button>
+        <button className={view === 'month' ? 'on' : ''} aria-pressed={view === 'month'} onClick={() => setView('month')}>ماهانه</button>
       </div>
       {view === 'week' ? (
         <div className="row between">
@@ -158,6 +158,7 @@ export default function Schedule() {
               <div className="muted">{fmtJWd(sel.date)} • {faTime(sel.start)} – {faTime(sel.end)}</div>
             </div>
             <span className="badge">{sel.type === 'test' ? 'تستی' : 'تشریحی'}</span>
+            <button className="ib" aria-label="بستن" onClick={() => setSel(null)}><Icon n="x" /></button>
           </div>
           <button className="btn primary block" onClick={() => { dispatch({ t: 'timer/start', courseId: sel.courseId, type: sel.type, ruleId: sel.ruleId, date: sel.date }); setSel(null); go('timer') }}>
             <Icon n="play" size={18} />شروع مطالعه

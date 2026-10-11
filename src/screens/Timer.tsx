@@ -27,7 +27,7 @@ export default function Timer() {
         ) : (
           <>
             <div className="card col" style={{ alignItems: 'stretch' }}>
-              <div className="clock" style={{ color: '#9ca3af' }}>{fmtClock(0)}</div>
+              <div className="clock" style={{ color: '#6b7280' }}>{fmtClock(0)}</div>
               <div className="chips">
                 {s.courses.map((c) => (
                   <button key={c.id} className={'chip' + (pick === c.id ? ' on' : '')} aria-pressed={pick === c.id} onClick={() => setPick(c.id)}>
@@ -36,8 +36,8 @@ export default function Timer() {
                 ))}
               </div>
               <div className="seg">
-                <button className={type === 'essay' ? 'on' : ''} onClick={() => setType('essay')}>تشریحی</button>
-                <button className={type === 'test' ? 'on' : ''} onClick={() => setType('test')}>تستی</button>
+                <button className={type === 'essay' ? 'on' : ''} aria-pressed={type === 'essay'} onClick={() => setType('essay')}>تشریحی</button>
+                <button className={type === 'test' ? 'on' : ''} aria-pressed={type === 'test'} onClick={() => setType('test')}>تستی</button>
               </div>
               <button className="btn success block" disabled={!pick} onClick={() => dispatch({ t: 'timer/start', courseId: pick, type })}><Icon n="play" size={18} />شروع</button>
             </div>
@@ -74,7 +74,7 @@ export default function Timer() {
     <div className="screen">
       <header className="row between">
         <h1 className="page-title">کرنومتر</h1>
-        <span className="badge" style={{ height: 28, background: running ? 'var(--success-soft)' : 'var(--danger-soft)', color: running ? 'var(--success-ink)' : '#b91c1c' }}>
+        <span role="status" className="badge" style={{ height: 28, background: running ? 'var(--success-soft)' : 'var(--danger-soft)', color: running ? 'var(--success-ink)' : '#b91c1c' }}>
           {running ? 'در حال مطالعه' : 'متوقف شده'}
         </span>
       </header>

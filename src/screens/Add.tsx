@@ -4,7 +4,7 @@ import { JMONTHS, WD_SHORT, WEEKDAYS, addDays, fa, fmtJ, fmtJWd, fromJ, jMonthLe
 import { findConflict } from '../lib/conflicts'
 import { uid } from '../lib/store'
 import type { Rule, StudyType } from '../types'
-import { Empty, Icon, cvar } from '../ui'
+import { Empty, Icon, cvar, useDialog } from '../ui'
 
 const nextDateOf = (wd: number) => {
   const t = today()
@@ -57,6 +57,7 @@ export default function Add() {
   const [type, setType] = useState<StudyType>(cur?.type ?? 'essay')
   const [repeat, setRepeat] = useState<'from' | 'one'>('from')
   const [ack, setAck] = useState(false)
+  const dlg = useDialog(closeAdd)
 
   const badTime = !start || !end || toMin(end) <= toMin(start)
 
@@ -101,7 +102,7 @@ export default function Add() {
 
   return (
     <div className="full">
-      <div className="inner">
+      <div className="inner" ref={dlg} tabIndex={-1} role="dialog" aria-modal aria-label={edit ? 'ویرایش جلسه' : 'برنامه جدید'}>
         <header className="row between">
           <h1 className="page-title">{edit ? (oneOnly ? 'ویرایش این جلسه' : 'ویرایش از این تاریخ به بعد') : 'برنامه جدید'}</h1>
           <button className="ib white" aria-label="بستن" onClick={closeAdd}><Icon n="x" /></button>
@@ -109,9 +110,9 @@ export default function Add() {
         {edit && <span className="muted">{fmtJWd(edit.date)}</span>}
 
         {!edit && (
-          <div className="seg" role="tablist">
-            <button className={mode === 'weekly' ? 'on' : ''} onClick={() => { setMode('weekly'); setAck(false) }}>برنامه هفتگی</button>
-            <button className={mode === 'once' ? 'on' : ''} onClick={() => { setMode('once'); setAck(false) }}>تاریخ مشخص</button>
+          <div className="seg">
+            <button className={mode === 'weekly' ? 'on' : ''} aria-pressed={mode === 'weekly'} onClick={() => { setMode('weekly'); setAck(false) }}>برنامه هفتگی</button>
+            <button className={mode === 'once' ? 'on' : ''} aria-pressed={mode === 'once'} onClick={() => { setMode('once'); setAck(false) }}>تاریخ مشخص</button>
           </div>
         )}
 
@@ -148,21 +149,21 @@ export default function Add() {
         <div className="row" style={{ gap: 12 }}>
           <div className="field" style={{ flex: 1 }}>
             <label htmlFor="st">ساعت شروع</label>
-            <input id="st" className="input" type="time" value={start} onChange={(e) => { setStart(e.target.value); setAck(false) }} />
+            <input id="st" className="input" type="time" aria-invalid={badTime} aria-describedby={badTime ? 'terr' : undefined} value={start} onChange={(e) => { setStart(e.target.value); setAck(false) }} />
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label htmlFor="en">ساعت پایان</label>
-            <input id="en" className="input" type="time" value={end} onChange={(e) => { setEnd(e.target.value); setAck(false) }} />
+            <input id="en" className="input" type="time" aria-invalid={badTime} aria-describedby={badTime ? 'terr' : undefined} value={end} onChange={(e) => { setEnd(e.target.value); setAck(false) }} />
           </div>
         </div>
-        {badTime && <div className="warn bad" role="alert">ساعت پایان باید بعد از ساعت شروع باشد.</div>}
+        {badTime && <div id="terr" className="warn bad" role="alert">ساعت پایان باید بعد از ساعت شروع باشد.</div>}
 
         {!oneOnly && (
           <div className="field">
             <span className="label">نوع مطالعه</span>
             <div className="seg">
-              <button className={type === 'essay' ? 'on' : ''} onClick={() => setType('essay')}>تشریحی</button>
-              <button className={type === 'test' ? 'on' : ''} onClick={() => setType('test')}>تستی</button>
+              <button className={type === 'essay' ? 'on' : ''} aria-pressed={type === 'essay'} onClick={() => setType('essay')}>تشریحی</button>
+              <button className={type === 'test' ? 'on' : ''} aria-pressed={type === 'test'} onClick={() => setType('test')}>تستی</button>
             </div>
           </div>
         )}
@@ -171,8 +172,8 @@ export default function Add() {
           <div className="field">
             <span className="label">تکرار</span>
             <div className="seg">
-              <button className={repeat === 'from' ? 'on' : ''} onClick={() => { setRepeat('from'); setAck(false) }}>از این هفته به بعد</button>
-              <button className={repeat === 'one' ? 'on' : ''} onClick={() => { setRepeat('one'); setAck(false) }}>فقط همین جلسه</button>
+              <button className={repeat === 'from' ? 'on' : ''} aria-pressed={repeat === 'from'} onClick={() => { setRepeat('from'); setAck(false) }}>از این هفته به بعد</button>
+              <button className={repeat === 'one' ? 'on' : ''} aria-pressed={repeat === 'one'} onClick={() => { setRepeat('one'); setAck(false) }}>فقط همین جلسه</button>
             </div>
             <span className="muted">شروع از {fmtJWd(nextDateOf(weekday))}</span>
           </div>

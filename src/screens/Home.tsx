@@ -30,7 +30,7 @@ export default function Home() {
           <span className="muted" style={{ fontWeight: 500 }}>{fmtJWd(t)} • {clock}</span>
           <h1 className="page-title" style={{ fontSize: 22 }}>{greet} آماده‌ی مطالعه‌ای؟</h1>
         </div>
-        <button className="ib white" aria-label="یادآورها" onClick={() => setBell(true)}><Icon n="bell" /></button>
+        <button className="ib white" aria-label="یادآورها" aria-haspopup="dialog" onClick={() => setBell(true)}><Icon n="bell" /></button>
       </header>
 
       <section className="hero" aria-label="زمان مطالعه امروز">
@@ -39,7 +39,7 @@ export default function Home() {
           <strong style={{ fontSize: 40, fontWeight: 800, lineHeight: 1.1 }}>{fmtHM(Math.floor(studied / 60))}</strong>
           <span style={{ fontSize: 14 }}>{planned ? `ساعت از ${fmtHM(planned)} برنامه‌ریزی‌شده` : 'ساعت — برنامه‌ای برای امروز نداری'}</span>
         </div>
-        <div className="bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: pct + '%' }} /></div>
+        <div className="bar" role="progressbar" aria-label="پیشرفت مطالعه امروز" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><i style={{ width: pct + '%' }} /></div>
         <div className="row" style={{ borderTop: '1px solid rgba(255,255,255,.25)', paddingTop: 14 }}>
           <div className="row" style={{ flex: 1 }}><Icon n="check" /><div><strong>{fa(nDone)} جلسه</strong><div style={{ fontSize: 12 }}>انجام‌شده</div></div></div>
           <div className="row" style={{ flex: 1 }}><Icon n="history" /><div><strong>{fa(list.length - nDone)} جلسه</strong><div style={{ fontSize: 12 }}>باقی‌مانده</div></div></div>

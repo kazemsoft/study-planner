@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 
 const P: Record<string, ReactNode> = {
   home: <><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></>,
@@ -31,10 +31,44 @@ export function Icon({ n, size = 22, sw = 1.75 }: { n: keyof typeof P; size?: nu
 
 export const cvar = (c: string) => ({ '--c': c }) as CSSProperties
 
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
+
+/** Dialog keyboard behaviour: focus moves in, Tab stays inside, Esc closes, focus returns to the opener. */
+export function useDialog(onClose: () => void) {
+  const ref = useRef<HTMLDivElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const opener = document.activeElement as HTMLElement | null
+    if (!el.contains(document.activeElement)) (el.querySelector<HTMLElement>('[autofocus],' + FOCUSABLE) ?? el).focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        close.current()
+      } else if (e.key === 'Tab') {
+        const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.offsetParent !== null)
+        if (!items.length) return e.preventDefault()
+        const first = items[0], last = items[items.length - 1]
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === el)) (e.preventDefault(), last.focus())
+        else if (!e.shiftKey && document.activeElement === last) (e.preventDefault(), first.focus())
+      }
+    }
+    el.addEventListener('keydown', onKey)
+    return () => {
+      el.removeEventListener('keydown', onKey)
+      if (opener?.isConnected) opener.focus()
+    }
+  }, [])
+  return ref
+}
+
 export function Sheet({ children, onClose, center, label }: { children: ReactNode; onClose: () => void; center?: boolean; label: string }) {
+  const ref = useDialog(onClose)
   return (
     <div className={'scrim' + (center ? ' center' : '')} onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal aria-label={label} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} tabIndex={-1} className="sheet" role="dialog" aria-modal aria-label={label} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>

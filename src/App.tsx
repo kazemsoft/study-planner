@@ -1,4 +1,5 @@
 import { Provider, useApp, type Tab } from './ctx'
+import ErrorBoundary from './ErrorBoundary'
 import Add from './screens/Add'
 import Courses from './screens/Courses'
 import Home from './screens/Home'
@@ -50,5 +51,5 @@ function Shell() {
 }
 
 export default function App() {
-  return <Provider><Shell /></Provider>
+  return <ErrorBoundary><Provider><Shell /></Provider></ErrorBoundary>
 }

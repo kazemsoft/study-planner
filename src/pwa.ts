@@ -8,7 +8,7 @@ export const onUpdateReady = (cb: () => void) => {
 }
 
 /** Activate the waiting version; the page reloads once it takes over. */
-export const applyUpdate = () => reg?.waiting?.postMessage('SKIP_WAITING')
+export const applyUpdate = () => (reg?.waiting ? reg.waiting.postMessage('SKIP_WAITING') : location.reload())
 
 export function registerSW() {
   if (!('serviceWorker' in navigator) || !import.meta.env.PROD) return
@@ -29,9 +29,10 @@ export function registerSW() {
     setInterval(check, 30 * 60_000)
     document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && check())
 
+    const hadController = !!navigator.serviceWorker.controller // first visit: nothing to refresh
     let reloaded = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded || !navigator.serviceWorker.controller) return
+      if (reloaded || !hadController) return
       reloaded = true
       location.reload()
     })

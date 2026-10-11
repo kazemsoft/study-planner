@@ -64,7 +64,7 @@ export default function Courses() {
           <h3 className="section-title">{form.id ? 'ویرایش درس' : 'درس جدید'}</h3>
           <div className="field">
             <label htmlFor="cn">نام درس</label>
-            <input id="cn" className="input" autoFocus maxLength={30} value={form.name} placeholder="مثلاً ریاضی" onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input id="cn" className="input" aria-invalid={!!dup} aria-describedby={dup ? 'dup' : undefined} autoFocus maxLength={30} value={form.name} placeholder="مثلاً ریاضی" onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="field">
             <span className="label">رنگ درس</span>
@@ -81,7 +81,7 @@ export default function Courses() {
             </label>
           </div>
           {other && <div className="warn bad" role="alert">این رنگ به «{other.name}» خیلی شبیه است؛ رنگ دیگری انتخاب کن.</div>}
-          {dup && <div className="warn bad" role="alert">درسی با این نام وجود دارد.</div>}
+          {dup && <div id="dup" className="warn bad" role="alert">درسی با این نام وجود دارد.</div>}
           <div className="card row" style={{ ...cvar(form.color), background: '#f7f7fa', boxShadow: 'none' }}>
             <span className="course-ico tint"><Icon n="book" /></span>
             <strong>{name || 'پیش‌نمایش'}</strong>
